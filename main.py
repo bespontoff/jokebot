@@ -14,6 +14,9 @@ proxies = {
 
 
 class JokeBot:
+
+    about_text = 'JokeBot v.0.1'
+
     def __init__(self, proxy=None, log_level='INFO'):
         self.bot = telebot.TeleBot(token)
         self.logger = telebot.logger
@@ -24,6 +27,12 @@ class JokeBot:
     def setup_handlers(self):
         self.logger.info('Setup handlers for bot')
         # тут логика обработчиков
+
+        @self.bot.message_handler(commands=['start', 'help'])
+        def handle_start_help(message):
+            self.bot.send_message(message.chat.id, JokeBot.about_text)
+
+        self.logger.info('Setup handlers complete')
 
     def run(self, *args, **kwargs):
         self.setup_handlers()
