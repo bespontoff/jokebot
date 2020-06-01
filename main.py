@@ -21,7 +21,16 @@ class JokeBot:
         if proxy:
             apihelper.proxy = proxy
 
+    def setup_handlers(self):
+        self.logger.info('Setup handlers for bot')
+        # тут логика обработчиков
+
+    def run(self, *args, **kwargs):
+        self.setup_handlers()
+        self.bot.polling(*args, **kwargs)
+
 
 if __name__ == '__main__':
     jb = JokeBot(proxy=proxies, log_level='DEBUG')
     jb.bot.get_me()
+    jb.run()
