@@ -1,8 +1,7 @@
 # -*- coding: UTF-8 -*-
 __author__ = 'bespontoff'
 
-import logging
-
+import requests
 import telebot
 from telebot import apihelper
 
@@ -14,7 +13,6 @@ proxies = {
 
 
 class JokeBot:
-
     about_text = 'JokeBot v.0.1'
 
     def __init__(self, proxy=None, log_level='INFO'):
@@ -38,8 +36,39 @@ class JokeBot:
         self.setup_handlers()
         self.bot.polling(*args, **kwargs)
 
+    def get_fun_content(self, theme: int) -> str:
+        """
+        :param theme: число от 1 до 18 соответсвующее теме из списка ниже
+        :return: str
+
+        Для получения данных в формате json используется запрос: http://rzhunemogu.ru/RandJSON.aspx?CType=?
+        где необходимо передать однин из следующих параметров (CType=?):
+        1 - Анекдот;
+        2 - Рассказы;
+        3 - Стишки;
+        4 - Афоризмы;
+        5 - Цитаты;
+        6 - Тосты;
+        8 - Статусы;
+        11 - Анекдот (+18);
+        12 - Рассказы (+18);
+        13 - Стишки (+18);
+        14 - Афоризмы (+18);
+        15 - Цитаты (+18);
+        16 - Тосты (+18);
+        18 - Статусы (+18);
+        """
+        api_url = f'http://rzhunemogu.ru/RandJSON.aspx?CType={theme}'
+        content = requests.get(api_url).content.decode('windows-1251')
+        self.logger.debug(content)
+        content = content[12:-2]
+        # TODO: сделать 10 и 20 тему, это видео, нужно выдергивать ссылку на видео и отправлять в чат как видео
+        return content
+
 
 if __name__ == '__main__':
     jb = JokeBot(proxy=proxies, log_level='DEBUG')
-    jb.bot.get_me()
-    jb.run()
+    # jb.bot.get_me()
+    # jb.run()
+    joke = jb.get_fun_content(20)
+    print(joke)
