@@ -14,14 +14,14 @@ proxies = {
 
 
 class JokeBot:
-    def __init__(self, proxy=None):
+    def __init__(self, proxy=None, log_level='INFO'):
         self.bot = telebot.TeleBot(token)
         self.logger = telebot.logger
-        telebot.logger.setLevel(logging.DEBUG)
+        telebot.logger.setLevel(log_level)
         if proxy:
             apihelper.proxy = proxy
 
 
 if __name__ == '__main__':
-    jb = JokeBot(proxy=proxies)
+    jb = JokeBot(proxy=proxies, log_level='DEBUG')
     jb.bot.get_me()
