@@ -7,8 +7,8 @@ from telebot import apihelper
 
 token = '237625759:AAFAgX-oY_lelc1X27PYRZFw0dCykfdR_Qk'
 proxies = {
-    'http': 'http://51.15.6.77:5836',
-    'https': 'https://51.15.6.77:5836',
+    # 'http': 'http://163.172.182.180:1234',
+    'https': 'https://163.172.182.180:1234',
 }
 
 
@@ -22,13 +22,34 @@ class JokeBot:
         if proxy:
             apihelper.proxy = proxy
 
+        self.themes = {
+            1: 'Анекдоты',
+            2: 'Рассказы',
+            3: 'Стишки',
+            4: 'Афоризмы',
+            5: 'Цитаты',
+            6: 'Тосты',
+            8: 'Статусы',
+            11: 'Анекдоты (+18)',
+            12: 'Рассказы (+18)',
+            13: 'Стишки (+18)',
+            14: 'Афоризмы (+18)',
+            15: 'Цитаты (+18)',
+            16: 'Тосты (+18)',
+            18: 'Статусы (+18)',
+        }
+
     def setup_handlers(self):
         self.logger.info('Setup handlers for bot')
         # тут логика обработчиков
 
         @self.bot.message_handler(commands=['start', 'help'])
         def handle_start_help(message):
-            self.bot.send_message(message.chat.id, JokeBot.about_text)
+            buttons = self.themes.values()
+            markup = telebot.types.ReplyKeyboardMarkup(row_width=2)
+            for button in buttons:
+                markup.row(button)
+            self.bot.send_message(message.chat.id, JokeBot.about_text, reply_markup=markup)
 
         self.logger.info('Setup handlers complete')
 
@@ -69,6 +90,6 @@ class JokeBot:
 if __name__ == '__main__':
     jb = JokeBot(proxy=proxies, log_level='DEBUG')
     # jb.bot.get_me()
-    # jb.run()
-    joke = jb.get_fun_content(20)
-    print(joke)
+    jb.run()
+    # joke = jb.get_fun_content(11)
+    # print(joke)
