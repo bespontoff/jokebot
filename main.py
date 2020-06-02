@@ -1,16 +1,16 @@
 # -*- coding: UTF-8 -*-
 __author__ = 'bespontoff'
 
+import random
+
+import freeproxy
 import requests
 import telebot
+from freeproxy import from_cn_proxy, from_cyber_syndrome, from_free_proxy_list, from_proxy_spy, from_hide_my_ip
 from telebot import apihelper
 
 token = '237625759:AAFAgX-oY_lelc1X27PYRZFw0dCykfdR_Qk'
-proxies = {
-    # 'http': 'http://163.172.182.180:1234',
-    'https': 'https://163.172.182.180:1234',
-}
-#TODO: автоматическое сканирование прокси и менеджер с реконектами
+
 
 class JokeBot:
     about_text = 'JokeBot v.0.1'
@@ -64,11 +64,7 @@ class JokeBot:
 
     def run(self, *args, **kwargs):
         self.setup_handlers()
-        try:
-            self.bot.polling(*args, **kwargs)
-        except requests.exceptions.ProxyError as e:
-            self.run()
-
+        self.bot.polling(*args, **kwargs)
 
     def get_fun_content(self, theme: int) -> str:
         """
@@ -101,9 +97,46 @@ class JokeBot:
         return content
 
 
+class BotLauncher:
+    def __init__(self, bot_cls, log_level='INFO', use_proxies=False):
+        self.logger = telebot.logger
+        self.log_level = log_level
+        telebot.logger.setLevel(self.log_level)
+        self.bot_cls = bot_cls
+        if use_proxies:
+            self.proxies = self.get_proxies()
+
+    def get_proxies(self):
+        self.logger.info('Start finding proxies')
+        proxies = from_cn_proxy() + from_cyber_syndrome() + from_free_proxy_list() + \
+            from_hide_my_ip() + from_proxy_spy()
+
+        self.logger.info('Testing proxies')
+        result = freeproxy.test_proxies(proxies, 8, 'http://httpbin.org/get')
+        result = [{'http': 'http://' + ip.strip(), 'https': 'https://' + ip.strip()} for ip in result]
+        random.shuffle(result)
+        return result
+
+    def start(self):
+        while True:
+            self.logger.info('Starting new bot instance')
+            proxy = None
+            if self.proxies:
+                try:
+                    proxy = self.proxies.pop()
+                except IndexError:
+                    self.logger.info('End of proxies list reached. Scan for new proxies')
+                    self.proxies = self.get_proxies()
+                    continue
+
+            try:
+                self.bot_cls(proxy=proxy, log_level=self.log_level).run()
+            except (requests.exceptions.ProxyError, requests.exceptions.ConnectionError) as e:
+                self.logger.debug(e)
+                self.logger.info('Restarting bot')
+                continue
+
+
 if __name__ == '__main__':
-    jb = JokeBot(proxy=proxies, log_level='DEBUG')
-    # jb.bot.get_me()
-    jb.run()
-    # joke = jb.get_fun_content(11)
-    # print(joke)
+    launcher = BotLauncher(bot_cls=JokeBot, log_level='INFO', use_proxies=True)
+    launcher.start()
