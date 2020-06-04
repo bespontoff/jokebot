@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 __author__ = 'bespontoff'
 
+import os
 import random
 
 import freeproxy
@@ -9,7 +10,7 @@ import telebot
 from freeproxy import from_cn_proxy, from_cyber_syndrome, from_free_proxy_list, from_proxy_spy, from_hide_my_ip
 from telebot import apihelper
 
-token = '237625759:AAFAgX-oY_lelc1X27PYRZFw0dCykfdR_Qk'
+token = os.environ.get('TG_BOT_TOKEN')
 
 
 class JokeBot:
@@ -139,4 +140,7 @@ class BotLauncher:
 
 if __name__ == '__main__':
     launcher = BotLauncher(bot_cls=JokeBot, log_level='INFO', use_proxies=True)
+    # launcher = BotLauncher(bot_cls=JokeBot, log_level='INFO')
+    # launcher.proxies = [{'http': 'http://82.119.170.106:8080',
+    #                      'https': 'https://82.119.170.106:8080', }]
     launcher.start()
