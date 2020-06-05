@@ -21,7 +21,7 @@ class JokeBot:
         self.logger = telebot.logger
         telebot.logger.setLevel(log_level)
         if proxy:
-            apihelper.proxy = proxy
+            self.set_proxy(proxy)
 
         self.themes = {
             'Анекдоты': 1,
@@ -39,10 +39,33 @@ class JokeBot:
             'Тосты (+18)': 16,
             'Статусы (+18)': 18,
         }
+        self.last_message = None
+
+    def set_proxy(self, proxy):
+        self.logger.debug(f'Set bot proxy to: {proxy}')
+        apihelper.proxy = proxy
 
     def setup_handlers(self):
         self.logger.info('Setup handlers for bot')
         # тут логика обработчиков
+
+        def last_query_saver(func):
+            """
+            декоратор сохранения последнего запроса
+            :param func:
+            :return:
+            """
+            def wrapper(message):
+                if self.last_message:
+                    self.logger.debug(f'Run saved message: {self.last_message}')
+                    func(self.last_message)
+                else:
+                    self.last_message = message
+
+                func(message)
+
+                self.last_message = None
+            return wrapper
 
         @self.bot.message_handler(commands=['start', 'help'])
         def handle_start_help(message):
@@ -56,6 +79,7 @@ class JokeBot:
             self.logger.info(f'Consuming message from user: {message.from_user.username}')
 
         @self.bot.message_handler(content_types=['text'])
+        @last_query_saver
         def handle_joke_themes(message):
             if message.text in self.themes.keys():
                 joke = self.get_fun_content(self.themes.get(message.text))
@@ -104,6 +128,7 @@ class BotLauncher:
         self.log_level = log_level
         telebot.logger.setLevel(self.log_level)
         self.bot_cls = bot_cls
+        self.current_bot = bot_cls(log_level=self.log_level)
         if use_proxies:
             self.proxies = self.get_proxies()
 
@@ -120,7 +145,7 @@ class BotLauncher:
 
     def start(self):
         while True:
-            self.logger.info('Starting new bot instance')
+            self.logger.info('Starting bot')
             proxy = None
             if self.proxies:
                 try:
@@ -131,7 +156,8 @@ class BotLauncher:
                     continue
 
             try:
-                self.bot_cls(proxy=proxy, log_level=self.log_level).run()
+                self.current_bot.set_proxy(proxy)
+                self.current_bot.run()
             except (requests.exceptions.ProxyError, requests.exceptions.ConnectionError) as e:
                 self.logger.debug(e)
                 self.logger.info('Restarting bot')
@@ -139,8 +165,8 @@ class BotLauncher:
 
 
 if __name__ == '__main__':
-    launcher = BotLauncher(bot_cls=JokeBot, log_level='INFO', use_proxies=True)
-    # launcher = BotLauncher(bot_cls=JokeBot, log_level='INFO')
-    # launcher.proxies = [{'http': 'http://82.119.170.106:8080',
-    #                      'https': 'https://82.119.170.106:8080', }]
+    launcher = BotLauncher(bot_cls=JokeBot, log_level='DEBUG', use_proxies=True)
+    # launcher = BotLauncher(bot_cls=JokeBot, log_level='DEBUG')
+    # launcher.proxies = [{'http': 'http://163.172.180.18:8811',
+    #                      'https': 'https://163.172.180.18:8811', }]
     launcher.start()
