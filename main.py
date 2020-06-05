@@ -9,7 +9,7 @@ import requests
 import telebot
 from freeproxy import from_cn_proxy, from_cyber_syndrome, from_free_proxy_list, from_proxy_spy, from_hide_my_ip
 from telebot import apihelper
-from urllib3.exceptions import ReadTimeoutError
+from urllib3.exceptions import ReadTimeoutError, MaxRetryError
 
 token = os.environ.get('TG_BOT_TOKEN')
 
@@ -159,7 +159,8 @@ class BotLauncher:
             try:
                 self.current_bot.set_proxy(proxy)
                 self.current_bot.run()
-            except (requests.exceptions.ProxyError, requests.exceptions.ConnectionError, ReadTimeoutError) as e:
+            except (requests.exceptions.ProxyError, requests.exceptions.ConnectionError, ReadTimeoutError,
+                    MaxRetryError) as e:
                 self.logger.debug(e)
                 self.logger.info('Restarting bot')
                 continue
