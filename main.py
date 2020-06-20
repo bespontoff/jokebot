@@ -11,14 +11,13 @@ from freeproxy import from_cn_proxy, from_cyber_syndrome, from_free_proxy_list, 
 from telebot import apihelper
 from urllib3.exceptions import ReadTimeoutError, MaxRetryError
 
-token = os.environ.get('TG_BOT_TOKEN')
-
 
 class JokeBot:
     about_text = 'JokeBot v.0.1'
 
     def __init__(self, proxy=None, log_level='INFO'):
-        self.bot = telebot.TeleBot(token)
+        self.token = os.environ.get('TG_BOT_TOKEN')
+        self.bot = telebot.TeleBot(self.token)
         self.logger = telebot.logger
         telebot.logger.setLevel(log_level)
         if proxy:
@@ -132,6 +131,8 @@ class BotLauncher:
         self.current_bot = bot_cls(log_level=self.log_level)
         if use_proxies:
             self.proxies = self.get_proxies()
+        else:
+            self.proxies = None
 
     def get_proxies(self):
         self.logger.info('Start finding proxies')
@@ -167,8 +168,5 @@ class BotLauncher:
 
 
 if __name__ == '__main__':
-    launcher = BotLauncher(bot_cls=JokeBot, log_level='DEBUG', use_proxies=True)
-    # launcher = BotLauncher(bot_cls=JokeBot, log_level='DEBUG')
-    # launcher.proxies = [{'http': 'http://163.172.180.18:8811',
-    #                      'https': 'https://163.172.180.18:8811', }]
+    launcher = BotLauncher(bot_cls=JokeBot, log_level='DEBUG')
     launcher.start()
